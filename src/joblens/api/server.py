@@ -1,0 +1,62 @@
+"""FastAPI 主入口。
+
+启动:  uv run uvicorn joblens.api.server:app --reload --port 8000
+文档:  http://localhost:8000/docs (Swagger UI, FastAPI 自带)
+"""
+from contextlib import asynccontextmanager
+from pathlib import Path
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
+from joblens.api.routes import router
+from joblens.config import get_cors_origins
+from joblens.history.storage import get_storage, reindex_missing
+
+# 前端静态文件目录(src/joblens/web/static)
+_STATIC_DIR = Path(__file__).resolve().parent.parent / "web" / "static"
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 启动时初始化历史库(首次会自动建表), 让 ~/.joblens/history.db 就绪。
+    storage = get_storage()
+    # 平滑升级: 给 SQLite 里有、向量库里没有的历史补索引(M8 前的旧数据 / 手删了 chroma)。
+    try:
+        n = reindex_missing(storage)
+        if n:
+            print(f"[joblens] reindexed {n} history entries into vector store")
+    except Exception as e:
+        print(f"[joblens] reindex skipped: {e}")
+    yield
+
+app = FastAPI(
+    title="职探 JobLens API",
+    description="把一份岗位 JD 和你的简历做深度对比, 输出匹配度、改写建议和面试重点。",
+    version="0.1.0",
+    lifespan=lifespan,
+)
+
+# CORS 来源由 .env 的 CORS_ORIGINS 控制（逗号分隔），默认仅放行本机前端。
+# 注意：allow_credentials=True 与通配符 "*" 组合在浏览器规范里是非法的，
+# 所以默认值用明确的 localhost 来源而不是 "*"。
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=get_cors_origins(),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(router)
+
+# 把 css/js 挂到 /static;index.html 单独在 "/" 提供(见下)。
+app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
+
+
+@app.get("/", include_in_schema=False)
+async def index() -> FileResponse:
+    """前后端同源: FastAPI 直接把前端主页面 serve 在根路径。"""
+    return FileResponse(_STATIC_DIR / "index.html")
