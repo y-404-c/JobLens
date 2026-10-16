@@ -81,7 +81,7 @@ def get_deepseek_model(temperature: float = 0.3, max_tokens: int = 8192) -> Chat
         except ValueError as exc:
             raise RuntimeError(f"LLM_EXTRA_BODY 不是合法 JSON: {raw_extra[:80]}") from exc
 
-    # 记住: api_key 的任何片段都不得 print / log(诚实红线 3.3, 此前确实漏过 key)。
+    
     return ChatOpenAI(
         model=model_name,
         api_key=api_key,

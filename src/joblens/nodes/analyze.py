@@ -22,7 +22,7 @@ async def analyze(state: AgentState) -> dict:
     schema_model = llm.with_structured_output(GapAnalysis, method="function_calling")
 
     # 用 model_dump_json 把 JDRequirements 序列化成规整 JSON 再塞进 prompt:
-    # 字段名一目了然, 模型读起来更稳(见 02-notes 决策)。
+    
     user_prompt = ANALYZE_PROMPT.format(
         jd=state["jd_structured"].model_dump_json(indent=2),
         resume=state["resume_raw_text"],

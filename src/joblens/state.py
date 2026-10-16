@@ -136,7 +136,5 @@ class AgentState(TypedDict, total=False):
 
     # 元信息
     # errors 用 Annotated[..., add] 声明了 reducer: 多个节点各自 append 错误时, 语义是
-    # "列表拼接"而不是"后来的覆盖先前的"。蓝图第 2 节原文写的是裸 list[str], 可那样在
-    # 多个节点都可能写 errors 的场景下(fetch_jd 失败 + extract 又失败)会把前一个错误丢掉
-    # —— 这里提前用 reducer 修掉, 对应 01-hello-graph/notes.md 概念①。
+    # "列表拼接"而不是"后来的覆盖先前的"。
     errors: Annotated[list[str], add]

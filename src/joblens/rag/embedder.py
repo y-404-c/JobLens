@@ -44,7 +44,7 @@ def _get_api_client():
             raise RuntimeError(
                 "EMBEDDING_BASE_URL 已配置, 但缺少 EMBEDDING_API_KEY / LLM_API_KEY"
             )
-        # 记住: api_key 的任何片段都不得 print / log。
+        
         _api_client = OpenAIEmbeddings(
             model=os.getenv("EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL).strip(),
             base_url=os.getenv("EMBEDDING_BASE_URL", "").strip().rstrip("/"),

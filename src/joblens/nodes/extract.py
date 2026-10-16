@@ -23,7 +23,7 @@ async def extract(state: AgentState) -> dict:
     # (OpenAI 的 structured outputs, 走 response_format), 但 DeepSeek 的 OpenAI-compatible
     # 端点不支持它, 会返回 400 "This response_format type is unavailable now"。
     # DeepSeek 支持的是 function/tool calling, 所以显式改成 function_calling, 让 schema
-    # 通过 tool 参数下发。(对应蓝图第 15 节的已知坑。)
+
     schema_model = llm.with_structured_output(JDRequirements, method="function_calling")
 
     user_prompt = EXTRACT_JD_PROMPT.format(jd_text=state["jd_raw_text"])
